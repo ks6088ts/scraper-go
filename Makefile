@@ -67,15 +67,12 @@ tidy: ## tidy
 # FIXME: update commands as you like
 .PHONY: ci
 ci: install-dev install-cobra ## ci
-	make cobra-init
-	make cobra-add COBRA_CMD=hello
-	# https://github.com/spf13/cobra/pull/1099
-	# make lint # uncomment to activate lint 
+	make lint # uncomment to activate lint 
 	make vet
 	make test
 	make crossbuild
 	$(OUT_DIR)/linux-amd64/$(REPO_NAME) --help
-	$(OUT_DIR)/linux-amd64/$(REPO_NAME) hello --help
+	$(OUT_DIR)/linux-amd64/$(REPO_NAME) browser --help
 
 # ---
 # Cobra: https://github.com/spf13/cobra
