@@ -25,35 +25,90 @@ package cmd
 
 import (
 	"fmt"
+	"log"
+	"os"
 
+	"github.com/sclevine/agouti"
 	"github.com/spf13/cobra"
 )
+
+type browserCmdOption struct {
+	url   string
+	xpath string
+	mode  string
+}
+
+var browserCmdOptionVar = &browserCmdOption{}
+
+func getDriver(mode string) *agouti.WebDriver {
+	if mode == "chrome" {
+		return agouti.ChromeDriver()
+	}
+	return agouti.ChromeDriver(
+		agouti.ChromeOptions("args", []string{
+			"--headless",             // headlessモードの指定
+			"--window-size=1280,800", // ウィンドウサイズの指定
+		}),
+	)
+}
 
 // browserCmd represents the browser command
 var browserCmd = &cobra.Command{
 	Use:   "browser",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "scrape with XPATH",
+	Long:  `scrape elements matched with the specified XPATH with browser`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("browser called")
+		driver := getDriver(browserCmdOptionVar.mode)
+		if err := driver.Start(); err != nil {
+			log.Print("Failed to start driver. Please set PATH to chromedriver.")
+			os.Exit(1)
+		}
+		defer driver.Stop()
+
+		page, err := driver.NewPage()
+		if err != nil {
+			log.Print("Failed to start page")
+			driver.Stop()
+			os.Exit(1)
+		}
+
+		if err := page.Navigate(browserCmdOptionVar.url); err != nil {
+			log.Printf("Failed to navigate page %v", browserCmdOptionVar.url)
+			driver.Stop()
+			os.Exit(1)
+		}
+
+		title, err := page.Title()
+		if err != nil {
+			log.Printf("Failed to get title %v", browserCmdOptionVar.url)
+			driver.Stop()
+			os.Exit(1)
+		}
+
+		fmt.Printf("[%v](%v)\n", title, browserCmdOptionVar.url)
+		items := page.AllByXPath(browserCmdOptionVar.xpath)
+		itemsCount, err := items.Count()
+		if err != nil {
+			log.Printf("Failed to get items")
+			driver.Stop()
+			os.Exit(1)
+		}
+		for i := 0; i < itemsCount; i++ {
+			if text, err := items.At(i).Text(); err == nil {
+				fmt.Printf("<item> %v\n", text)
+			}
+		}
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(browserCmd)
 
-	// Here you will define your flags and configuration settings.
+	browserCmd.Flags().StringVarP(&browserCmdOptionVar.url, "url", "l", "https://qiita.com/", "URL (required)")
+	browserCmd.MarkFlagRequired("url")
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// browserCmd.PersistentFlags().String("foo", "", "A help for foo")
+	browserCmd.Flags().StringVarP(&browserCmdOptionVar.xpath, "xpath", "x", "//a[@class='tr-Item_title']", "XPath (required)")
+	browserCmd.MarkFlagRequired("xpath")
 
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// browserCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	browserCmd.Flags().StringVarP(&browserCmdOptionVar.mode, "mode", "m", "headless", "Mode (headless|chrome)")
 }

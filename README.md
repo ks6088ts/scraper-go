@@ -4,3 +4,24 @@
 
 # scraper-go
 Template repository for Go
+
+# commands
+
+## browser
+
+scrape elements matched with the specified XPATH with browser
+
+**Prerequisites**
+- install Google Chrome
+- set PATH to [chromedriver](https://chromedriver.chromium.org/downloads)
+
+```bash
+# help for browser
+scraper-go browser --help
+
+# scrape webpage
+scraper-go browser \
+    --mode chrome
+    --xpath //a/article/h1 \
+    --url https://search.yahoo.co.jp/realtime
+```
