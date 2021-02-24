@@ -1,3 +1,3 @@
-module github.com/ks6088ts/template-go
+module github.com/ks6088ts/scraper-go
 
 go 1.15

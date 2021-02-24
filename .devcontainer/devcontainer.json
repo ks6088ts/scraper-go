@@ -1,10 +1,10 @@
 {
-	"name": "template-go",
+	"name": "scraper-go",
 	"dockerComposeFile": [
 		"../docker-compose.yml",
 	],
 	"service": "go",
-	"workspaceFolder": "/go/src/github.com/ks6088ts/template-go",
+	"workspaceFolder": "/go/src/github.com/ks6088ts/scraper-go",
 	"settings": {
 		"terminal.integrated.shell.linux": null
 	},
